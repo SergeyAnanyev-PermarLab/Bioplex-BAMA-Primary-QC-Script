@@ -5,7 +5,7 @@ Primary QC script for Bioplex BAMA assays
 **2.1**
   - Script was converted into loops and functions so that it can run automatically on all files within a folder
 **2.1.1**
-  - TO DO: Implement filtering function within the interpolation function before printing the filtered frames
-  - FilterQCValues() Overview:
-      - Handle the QC (low bead count, high CV, high blank bead MFI) and set failing values to "NA"
-      - Inputs: frame that is about to be filtered, low bead count cutoff, high cv cutoff, high blank bead mfi cutoff
+  - Edited the interpolation function to handle QC filtering differently
+  - Filtered MFI values in "Blank()" column that are over 1000 are set to NA
+  - Filtered MFI values that are under 100 are set to NA
+    
