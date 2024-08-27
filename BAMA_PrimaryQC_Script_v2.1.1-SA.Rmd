@@ -467,7 +467,7 @@ allData.BlankBeadProcessed <- lapply(allData, function(x) processBlankBeadData(x
 # Prep Data for interpolation and export to prism
 
 ```{r}
-interpolateAndProcessData <- function(rawData, assayName, headerrows, blankBeadCutoff, standardCurve, dilutionfactor, workingDirectory, dilutioncurvepath, sampledilutionpath, allData, SamplingErrorsProcessed, BeadCountProcessed, CVProcessed, BlankWellProcessed, BlankBeadProcessed, currentIteration){
+interpolateAndProcessData <- function(rawData, assayName, headerrows, blankBeadCutoff, standardCurve, dilutionfactor, workingDirectory, dilutioncurvepath, sampledilutionpath, allData, SamplingErrorsProcessed, BeadCountProcessed, CVProcessed, BlankWellProcessed, BlankBeadProcessed, currentIteration, cvCutoff, lowbeadcountcutoff, lowMFI){
 
 
    # Trim "_RAW.xlsx" from the end of assayName
@@ -778,16 +778,25 @@ if (nrow(mfiSTD) == 0) {
   write.csv(mfisRaw, mfirawpath_unfiltered, row.names = FALSE)
   write.csv(sample.dil.x.conc, interpolatedconcpath, row.names = FALSE)
   
-  # Filter out rows from mfisRaw where column 1 matches QC_filter_values
-mfisFiltered <- mfisRaw[!mfisRaw[,1] %in% QC_filter_values,]
+  # Find the column that begins with "Blank"
+  blank_col <- grep("^Blank", colnames(mfisRaw), value = TRUE)
 
-# Filter out rows from sample.dil.x.conc where column 1 matches QC_filter_values
-interpolatedFiltered <- sample.dil.x.conc[!sample.dil.x.conc[,1] %in% QC_filter_values,]
+  # Set values higher than blankbeadcutoff to NA in the "Blank" column
+  mfisRaw[mfisRaw[[blank_col]] > blankBeadCutoff, blank_col] <- NA
 
-# Write out the filtered MFIs and the filtered interpolated sample concentrations
-write.csv(mfisFiltered, mfirawpath, row.names = FALSE)
-write.csv(interpolatedFiltered, interpolated_filtered, row.names = FALSE)
-write.csv(QC_File, qcpath, row.names = FALSE)
+  # Set values lower than lowMFI to NA in every column except the first one
+  mfisRaw[, -1] <- lapply(mfisRaw[, -1], function(x) ifelse(x < lowMFI, NA, x))
+
+  # The filtered data
+  mfisFiltered <- mfisRaw
+  
+  # Filter out rows from sample.dil.x.conc where column 1 matches QC_filter_values
+  interpolatedFiltered <- sample.dil.x.conc[!sample.dil.x.conc[,1] %in% QC_filter_values,]
+
+  # Write out the filtered MFIs and the filtered interpolated sample concentrations
+  write.csv(mfisFiltered, mfirawpath, row.names = FALSE)
+  write.csv(interpolatedFiltered, interpolated_filtered, row.names = FALSE)
+  write.csv(QC_File, qcpath, row.names = FALSE)
   
   # save standard curve plots
   #png(paste(wd, assayname, "_STD_CURVES.png", sep = ""))
@@ -803,7 +812,7 @@ write.csv(QC_File, qcpath, row.names = FALSE)
 currentIteration <<- 1
 
 # Apply the function to all data
-QCoutput <- mapply(function(x, name) interpolateAndProcessData(x, name, headerrows, blankBeadCutoff, standardCurve, dilutionfactor, workingDirectory, dilutioncurvepath, sampledilutionpath, allData, allData.SamplingErrorsProcessed, allData.BeadCountProcessed, allData.CVProcessed, allData.BlankWellProcessed, allData.BlankBeadProcessed, currentIteration), allData, names(allData), SIMPLIFY=FALSE)
+QCoutput <- mapply(function(x, name) interpolateAndProcessData(x, name, headerrows, blankBeadCutoff, standardCurve, dilutionfactor, workingDirectory, dilutioncurvepath, sampledilutionpath, allData, allData.SamplingErrorsProcessed, allData.BeadCountProcessed, allData.CVProcessed, allData.BlankWellProcessed, allData.BlankBeadProcessed, currentIteration, cvCutoff, lowbeadcountcutoff, lowMFI), allData, names(allData), SIMPLIFY=FALSE)
 ```
 
 
