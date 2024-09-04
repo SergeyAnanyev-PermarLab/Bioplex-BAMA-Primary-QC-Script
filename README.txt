@@ -10,3 +10,5 @@ Primary QC script for Bioplex BAMA assays
   - Filtered MFI values that are under 100 are set to NA
 **2.1.2**
   - Fixed QC_File reference so that the column names in the qc file output don't change when printed
+
+
