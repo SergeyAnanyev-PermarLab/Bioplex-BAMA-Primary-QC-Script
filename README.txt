@@ -8,4 +8,5 @@ Primary QC script for Bioplex BAMA assays
   - Edited the interpolation function to handle QC filtering differently
   - Filtered MFI values in "Blank()" column that are over 1000 are set to NA
   - Filtered MFI values that are under 100 are set to NA
-    
+**2.1.2**
+  - Fixed QC_File reference so that the column names in the qc file output don't change when printed
